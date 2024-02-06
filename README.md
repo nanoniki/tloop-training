@@ -29,6 +29,6 @@ Individual Read Query: Optionally allows querying of individual reads for True P
 ```python learntLoop-yeast.py -T ./IVT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv -t ./IVT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv```
 
 ## Requirements
-Python 3.x
-pandas
-scikit-learn
+- Python 3.x
+- pandas
+- scikit-learn
