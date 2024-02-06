@@ -4,11 +4,11 @@
 The learntLoop class is a tool designed for training and evaluating Support Vector Machine (SVM) classifiers on tRNA sequence data obtained from Nanopore reads. It accepts input in the form of training and testing arrays, typically provided as .tsv or .csv files. The class performs several tasks, including one-hot encoding on the input data, shuffling and concatenating the training data, training an SVM classifier, predicting labels for testing data, and analyzing the results.
 
 ## Features
-One-Hot Encoding: Converts input data into a one-hot encoded format, enabling SVM training and prediction.
-Data Shuffling: Randomly shuffles and concatenates training data to ensure balanced training samples.
-Classification: Utilizes SVM classifier to predict labels for testing data.
-Result Analysis: Provides detailed analysis including accuracy, confusion matrix, and classification report.
-Individual Read Query: Optionally allows querying of individual reads for True Positives (TP), False Positives (FP), False Negatives (FN), or True Negatives (TN).
+- One-Hot Encoding: Converts input data into a one-hot encoded format, enabling SVM training and prediction.
+- Data Shuffling: Randomly shuffles and concatenates training data to ensure balanced training samples.
+- Classification: Utilizes SVM classifier to predict labels for testing data.
+- Result Analysis: Provides detailed analysis including accuracy, confusion matrix, and classification report.
+- Individual Read Query: Optionally allows querying of individual reads for True Positives (TP), False Positives (FP), False Negatives (FN), or True Negatives (TN).
 
 ## Usage
 
