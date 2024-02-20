@@ -14,19 +14,19 @@ The learntLoop class is a tool designed for training and evaluating Support Vect
 
 ```python learntLoop.py -T <training_files> -t <testing_files> [options]```
 
-## Arguments
-- -T, --Training: Input at least two training array files.
-- -t, --testing: Input at least two testing array files.
-- -l, --label: Designate the training label associated with the testing array.
-- -q, --query-reads: Print out True Positive (TP), False Positive (FP), False Negative (FN), or True Negative (TN) classified reads.
-- -s, --spike-in: Spike in a percentage of reads from another array.
-- -r, --read-titrant: Input the array file containing reads that will be titrated.
-- -tl, --titrant-label: Assign the titrated reads array a label.
-- -c, --classification: Use One-Versus-Rest (ovr) or One-Versus-One (ovo) classification (Default ovr).
+## Command-line Arguments
+    -T, --Training: Input at least two training array files.
+    -t, --testing: Input at least two testing array files.
+    -l, --label: Designate the training label associated with the testing array.
+    -q, --query-reads: Print out True Positive (TP), False Positive (FP), False Negative (FN), or True Negative (TN) classified reads.
+    -s, --spike-in: Spike in a percentage of reads from another array.
+    -r, --read-titrant: Input the array file containing reads that will be titrated.
+    -tl, --titrant-label: Assign the titrated reads array a label.
+    -c, --classification: Use One-Versus-Rest (ovr) or One-Versus-One (ovo) classification (Default ovr).
 
 ## Example
 
-```python learntLoop-yeast.py -T ./IVT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv -t ./IVT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv```
+      python learntLoop-yeast.py -T ./IVT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/training/Saccharomyces_cerevisiae_chrI_trna4-         SerAGA.tsv -t ./IVT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv
 
 ## Requirements
 - Python 3.x
