@@ -26,7 +26,7 @@ The learntLoop class is a tool designed for training and evaluating Support Vect
 
 ## Example
 
-      python learntLoop-yeast.py -T ./IVT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/training/Saccharomyces_cerevisiae_chrI_trna4-         SerAGA.tsv -t ./IVT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv
+        python learntLoop-yeast.py -T ./IVT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv -t ./IVT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv
 
 ## Requirements
 - Python 3.x
