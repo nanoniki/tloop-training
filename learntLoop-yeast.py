@@ -137,11 +137,11 @@ class learntLoop:
         # Print results
         tRNA_file = self.testing_files[0].split('/')[-1].split('.')[0].split('-')[-1]
         if tRNA_file.isdigit():
-            if self.testing_files.split('/')[-1].split('.')[0].split('-')[-3] == 'CAT':
-                tRNA = self.testing_files.split('/')[-1].split('.')[0].split('-')[-4] + \
-                       self.testing_files.split('/')[-1].split('.')[0].split('-')[-3]
+            if self.testing_files[0].split('/')[-1].split('.')[0].split('-')[-3] == 'CAT':
+                tRNA = self.testing_files[0].split('/')[-1].split('.')[0].split('-')[-4] + \
+                       self.testing_files[0].split('/')[-1].split('.')[0].split('-')[-3]
             else:
-                tRNA = self.testing_files.split('/')[-1].split('.')[0].split('-')[-3]
+                tRNA = self.testing_files[0].split('/')[-1].split('.')[0].split('-')[-3]
         else:
             tRNA = tRNA_file
 
