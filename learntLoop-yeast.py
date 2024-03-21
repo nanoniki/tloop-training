@@ -12,17 +12,15 @@ analyzed, including accuracy, confusion matrix, and classification report."""
 
 
 class learntLoop:
-    def __init__(self, training_files, testing_files, label, spike_in, read_titrant, titrant_label, classification, query_reads):
+    def __init__(self, training_files, testing_files, labels, classification, profile, query_reads):
         self.training_files = training_files
         self.testing_files = testing_files
-        self.label = label
-        self.spike_in = spike_in
-        self.read_titrant = read_titrant
-        self.titrant_label = titrant_label
+        self.labels = list(map(int, labels))
         self.classification = classification
+        self.profile = profile
         self.query_reads = query_reads
-        self.cnd_index = {}
 
+        self.cnds = {}
         self.training_dfs = []
         self.testing_dfs = []
         self.combo_train = None
@@ -83,25 +81,360 @@ class learntLoop:
 
     def format_dataframe(self):
         # Get dataframes from input files
-        cnd = ['IVT', 'WT', 'pus4', 'gcd10', 'trm2']  # hardcoded condition names
+
+        # training labels
+        default_training_labels = {'trm2d_local': {
+            'Saccharomyces_cerevisiae_chrIII_trna2-AsnGTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIII_trna4-SerCGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIII_trna6-GlnTTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIII_trna7-LysCTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIII_trna9-ProAGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna1-LeuTAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna10-GluTTC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna11-CysGCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna12-ValTAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna13-GlyGCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna3-IleAAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna5-ThrAGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna8-ArgTCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna9-AspGTC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIV_trna12-MetCAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIV_trna20-ValCAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIV_trna26-ArgACG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIV_trna3-AlaAGC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIV_trna9-IleTAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIX_trna4-SerTGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrI_trna2-AlaTGC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna1-LysTTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna10-ThrTGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna11-LeuGAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna16-GlyTCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna33-TrpCCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna7-LeuCAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVI_trna1-ProTGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVI_trna7-SerGCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVI_trna9-PheGAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrV_trna15-HisGTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrV_trna8-ValAAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrXIII_trna8-GlnCTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrXII_trna10-ArgCCG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrXI_trna16-ThrCGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrXV_trna16-GlyCCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrX_trna10-ArgCCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrX_trna12-LeuTAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_tRNA-GluCTC-1-2.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_tRNA-TyrGTA-1-1.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_tRNA-iMet-CAT-1-4.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 1, 'trm2': 0}},
+            'pus4d_local': {'Saccharomyces_cerevisiae_chrIII_trna2-AsnGTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIII_trna4-SerCGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIII_trna6-GlnTTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIII_trna7-LysCTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIII_trna9-ProAGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna1-LeuTAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna10-GluTTC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna11-CysGCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna12-ValTAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna13-GlyGCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna3-IleAAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna5-ThrAGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna8-ArgTCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna9-AspGTC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIV_trna12-MetCAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIV_trna20-ValCAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIV_trna26-ArgACG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIV_trna3-AlaAGC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIV_trna9-IleTAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIX_trna4-SerTGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrI_trna2-AlaTGC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna1-LysTTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna10-ThrTGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna11-LeuGAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna16-GlyTCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna33-TrpCCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna7-LeuCAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVI_trna1-ProTGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVI_trna7-SerGCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVI_trna9-PheGAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrV_trna15-HisGTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrV_trna8-ValAAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrXIII_trna8-GlnCTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrXII_trna10-ArgCCG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrXI_trna16-ThrCGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrXV_trna16-GlyCCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrX_trna10-ArgCCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrX_trna12-LeuTAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_tRNA-GluCTC-1-2.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_tRNA-TyrGTA-1-1.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_tRNA-iMet-CAT-1-4.tsv': {'IVT': 0, 'WT': 0, 'pus4': 0, 'gcd10': 1, 'trm2': 0}},
+            'trm6d_local': {'Saccharomyces_cerevisiae_chrIII_trna2-AsnGTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIII_trna4-SerCGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIII_trna6-GlnTTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIII_trna7-LysCTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIII_trna9-ProAGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna1-LeuTAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna10-GluTTC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna11-CysGCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna12-ValTAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna13-GlyGCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna3-IleAAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna5-ThrAGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna8-ArgTCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna9-AspGTC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIV_trna12-MetCAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIV_trna20-ValCAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIV_trna26-ArgACG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIV_trna3-AlaAGC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIV_trna9-IleTAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIX_trna4-SerTGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrI_trna2-AlaTGC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna1-LysTTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna10-ThrTGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna11-LeuGAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna16-GlyTCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna33-TrpCCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna7-LeuCAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVI_trna1-ProTGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVI_trna7-SerGCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVI_trna9-PheGAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrV_trna15-HisGTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrV_trna8-ValAAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrXIII_trna8-GlnCTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrXII_trna10-ArgCCG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrXI_trna16-ThrCGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrXV_trna16-GlyCCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrX_trna10-ArgCCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrX_trna12-LeuTAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_tRNA-GluCTC-1-2.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_tRNA-TyrGTA-1-1.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_tRNA-iMet-CAT-1-4.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1}},
+            'ivt_local': {'Saccharomyces_cerevisiae_chrIII_trna2-AsnGTT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIII_trna4-SerCGA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIII_trna6-GlnTTG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIII_trna7-LysCTT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIII_trna9-ProAGG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna1-LeuTAA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna10-GluTTC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna11-CysGCA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna12-ValTAC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna13-GlyGCC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna3-IleAAT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna5-ThrAGT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna8-ArgTCT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna9-AspGTC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIV_trna12-MetCAT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIV_trna20-ValCAC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIV_trna26-ArgACG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIV_trna3-AlaAGC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIV_trna9-IleTAT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIX_trna4-SerTGA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrI_trna2-AlaTGC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna1-LysTTT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna10-ThrTGT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna11-LeuGAG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna16-GlyTCC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna33-TrpCCA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna7-LeuCAA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVI_trna1-ProTGG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVI_trna7-SerGCT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVI_trna9-PheGAA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrV_trna15-HisGTG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrV_trna8-ValAAC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrXIII_trna8-GlnCTG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrXII_trna10-ArgCCG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrXI_trna16-ThrCGT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrXV_trna16-GlyCCC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrX_trna10-ArgCCT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrX_trna12-LeuTAG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_tRNA-GluCTC-1-2.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_tRNA-TyrGTA-1-1.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_tRNA-iMet-CAT-1-4.tsv': {'IVT': 0, 'WT': 1}},
+            'm5u54_global': {
+            'Saccharomyces_cerevisiae_chrIII_trna2-AsnGTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIII_trna4-SerCGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIII_trna6-GlnTTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIII_trna7-LysCTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIII_trna9-ProAGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna1-LeuTAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna10-GluTTC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna11-CysGCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna12-ValTAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna13-GlyGCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna3-IleAAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna5-ThrAGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna8-ArgTCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrII_trna9-AspGTC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIV_trna12-MetCAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIV_trna20-ValCAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIV_trna26-ArgACG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIV_trna3-AlaAGC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIV_trna9-IleTAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrIX_trna4-SerTGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrI_trna2-AlaTGC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna1-LysTTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna10-ThrTGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna11-LeuGAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna16-GlyTCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna33-TrpCCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVII_trna7-LeuCAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVI_trna1-ProTGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVI_trna7-SerGCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrVI_trna9-PheGAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrV_trna15-HisGTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrV_trna8-ValAAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrXIII_trna8-GlnCTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrXII_trna10-ArgCCG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrXI_trna16-ThrCGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrXV_trna16-GlyCCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrX_trna10-ArgCCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_chrX_trna12-LeuTAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_tRNA-GluCTC-1-2.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_tRNA-TyrGTA-1-1.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 1, 'trm2': 0},
+            'Saccharomyces_cerevisiae_tRNA-iMet-CAT-1-4.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 1, 'trm2': 0}},
+            'p55_global': {'Saccharomyces_cerevisiae_chrIII_trna2-AsnGTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIII_trna4-SerCGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIII_trna6-GlnTTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIII_trna7-LysCTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIII_trna9-ProAGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna1-LeuTAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna10-GluTTC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna11-CysGCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna12-ValTAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna13-GlyGCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna3-IleAAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna5-ThrAGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna8-ArgTCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrII_trna9-AspGTC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIV_trna12-MetCAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIV_trna20-ValCAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIV_trna26-ArgACG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIV_trna3-AlaAGC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIV_trna9-IleTAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrIX_trna4-SerTGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrI_trna2-AlaTGC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna1-LysTTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna10-ThrTGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna11-LeuGAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna16-GlyTCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna33-TrpCCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVII_trna7-LeuCAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVI_trna1-ProTGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVI_trna7-SerGCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrVI_trna9-PheGAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrV_trna15-HisGTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrV_trna8-ValAAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrXIII_trna8-GlnCTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrXII_trna10-ArgCCG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrXI_trna16-ThrCGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrXV_trna16-GlyCCC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrX_trna10-ArgCCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_chrX_trna12-LeuTAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_tRNA-GluCTC-1-2.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_tRNA-TyrGTA-1-1.tsv': {'IVT': 0, 'WT': 1, 'pus4': 0, 'gcd10': 1, 'trm2': 1},
+                    'Saccharomyces_cerevisiae_tRNA-iMet-CAT-1-4.tsv': {'IVT': 0, 'WT': 0, 'pus4': 0, 'gcd10': 1, 'trm2': 0}},
+            'm1a58_global': {'Saccharomyces_cerevisiae_chrIII_trna2-AsnGTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIII_trna4-SerCGA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIII_trna6-GlnTTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIII_trna7-LysCTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIII_trna9-ProAGG.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna1-LeuTAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna10-GluTTC.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna11-CysGCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna12-ValTAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna13-GlyGCC.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna3-IleAAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna5-ThrAGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna8-ArgTCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrII_trna9-AspGTC.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIV_trna12-MetCAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIV_trna20-ValCAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIV_trna26-ArgACG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIV_trna3-AlaAGC.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIV_trna9-IleTAT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrIX_trna4-SerTGA.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrI_trna2-AlaTGC.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna1-LysTTT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna10-ThrTGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna11-LeuGAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna16-GlyTCC.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna33-TrpCCA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVII_trna7-LeuCAA.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVI_trna1-ProTGG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVI_trna7-SerGCT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrVI_trna9-PheGAA.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrV_trna15-HisGTG.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrV_trna8-ValAAC.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrXIII_trna8-GlnCTG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrXII_trna10-ArgCCG.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrXI_trna16-ThrCGT.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrXV_trna16-GlyCCC.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrX_trna10-ArgCCT.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_chrX_trna12-LeuTAG.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_tRNA-GluCTC-1-2.tsv': {'IVT': 0, 'WT': 0, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_tRNA-TyrGTA-1-1.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1},
+                      'Saccharomyces_cerevisiae_tRNA-iMet-CAT-1-4.tsv': {'IVT': 0, 'WT': 1, 'pus4': 1, 'gcd10': 0, 'trm2': 1}},
+            'ivt_global': {'Saccharomyces_cerevisiae_chrIII_trna2-AsnGTT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIII_trna4-SerCGA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIII_trna6-GlnTTG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIII_trna7-LysCTT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIII_trna9-ProAGG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna1-LeuTAA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna10-GluTTC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna11-CysGCA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna12-ValTAC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna13-GlyGCC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna3-IleAAT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna5-ThrAGT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna8-ArgTCT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrII_trna9-AspGTC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIV_trna12-MetCAT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIV_trna20-ValCAC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIV_trna26-ArgACG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIV_trna3-AlaAGC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIV_trna9-IleTAT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrIX_trna4-SerTGA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrI_trna2-AlaTGC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna1-LysTTT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna10-ThrTGT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna11-LeuGAG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna16-GlyTCC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna33-TrpCCA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVII_trna7-LeuCAA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVI_trna1-ProTGG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVI_trna7-SerGCT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrVI_trna9-PheGAA.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrV_trna15-HisGTG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrV_trna8-ValAAC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrXIII_trna8-GlnCTG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrXII_trna10-ArgCCG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrXI_trna16-ThrCGT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrXV_trna16-GlyCCC.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrX_trna10-ArgCCT.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_chrX_trna12-LeuTAG.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_tRNA-GluCTC-1-2.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_tRNA-TyrGTA-1-1.tsv': {'IVT': 0, 'WT': 1},
+             'Saccharomyces_cerevisiae_tRNA-iMet-CAT-1-4.tsv': {'IVT': 0, 'WT': 1}}}
+
         training_dfs = []
 
-        for i, file in enumerate(self.training_files):
-            training_dfs.append(self.get_dataframe(file, i))
+        for file in self.training_files:
             guts = file.split('/')
-            for x in guts:
-                if x in cnd:
-                    self.cnd_index[i] = x
+            condition = guts[0]
+            tRNA = guts[2]
+            self.cnds[condition] = None
+            training_dfs.append(self.get_dataframe(file, default_training_labels[self.profile][tRNA][condition]))
 
         testing_dfs = []
-        cnd_test_index = {}
 
         for i, file in enumerate(self.testing_files):
-            testing_dfs.append(self.get_dataframe(file, i))
-            guts = file.split('/')
-            for x in guts:
-                if x in cnd:
-                    cnd_test_index[i] = x
+            testing_dfs.append(self.get_dataframe(file, self.labels[i]))
 
         # Shuffle and concatenate dataframes
         combo_train, min_len_train = self.shuffle_dataframe(training_dfs)
@@ -147,7 +480,7 @@ class learntLoop:
 
         print('\n')
         print(tRNA)
-        self.print_stats(predictions, len(self.test_df), self.cnd_index)
+        self.print_stats(predictions, len(self.test_df), [*self.cnds])
 
         print('\n')
         accuracy = accuracy_score(self.test_df['class'], predictions)
@@ -188,7 +521,6 @@ class learntLoop:
 
 
 def main():
-
     # Define and parse arguments
     parser = argparse.ArgumentParser(
         description='Learning tRNA loops at the sequence level with Nanopore reads. The input arrays should be '
@@ -200,25 +532,19 @@ def main():
     parser.add_argument('-t', '--testing', nargs='+', metavar='filepaths', required=True,
                         help='Input at least two testing array files. Each file is assigned a label, '
                              'index starting at 0, depending on the order of your input.')
-    parser.add_argument('-l', '--label', type=int, metavar='int', required=False,
-                        help='Designate the training label associated with the testing array. It should match the '
-                             'index label of the corresponding training array (see -T help).')
-    parser.add_argument('-q', '--query-reads', type=str, metavar='str', required=False,
-                        choices=['TP', 'FP', 'FN', 'TN'],
-                        help='Option to print out True Positive, False Positive, False Negative, or True Negative '
-                             'classified reads,')
-    parser.add_argument('-s', '--spike-in', type=float, metavar='float', required=False,
-                        help='Option to spike in a percentage of reads from another array.')
-    parser.add_argument('-r', '--read-titrant', metavar='filepath', required=False,
-                        help='Input the array file containing reads that will be titrated.')
-    parser.add_argument('-tl', '--titrant-label', metavar='int', required=False,
-                        help='Assign the titrated reads array a label.')
+    parser.add_argument('-l', '--labels', nargs='+', required=False,
+                        help='Designate the labels associated with the testing arrays.')
     parser.add_argument('-c', '--classification', type=str, metavar='str', required=False, default='ovr',
                         help='Option to use ovo or ovr classification (Default ovr).')
+    parser.add_argument('-p', '--profile', type=str, metavar='str', required=True,
+                        choices=['trm2d_local', 'pus4d_local', 'trm6d_local', 'ivt_local','m5u54_global', 'p55_global', 'm1a58_global', 'ivt_global'],
+                        help='Indicate the T-loop modification profile being analyzed.')
+    parser.add_argument('-q', '--query-reads', type=str, metavar='str', required=False, choices=['TP', 'FP', 'FN', 'TN'],
+                        help='Option to print out True Positive, False Positive, False Negative, or True Negative '
+                             'classified reads,')
     args = parser.parse_args()
 
-    learntLoop(args.Training, args.testing, args.label, args.spike_in, args.read_titrant, args.titrant_label,
-               args.classification, args.query_reads)
+    learntLoop(args.Training, args.testing, args.labels, args.classification, args.profile, args.query_reads)
 
 
 if __name__ == "__main__":
