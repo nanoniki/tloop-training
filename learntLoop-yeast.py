@@ -533,12 +533,12 @@ def main():
                         help='Input at least two testing array files. Each file is assigned a label, '
                              'index starting at 0, depending on the order of your input.')
     parser.add_argument('-l', '--labels', nargs='+', required=False,
-                        help='Designate the labels associated with the testing arrays.')
+                        help='Designate the labels associated with the testing arrays (e.g. 0 1).')
     parser.add_argument('-c', '--classification', type=str, metavar='str', required=False, default='ovr',
                         help='Option to use ovo or ovr classification (Default ovr).')
     parser.add_argument('-p', '--profile', type=str, metavar='str', required=True,
                         choices=['trm2d_local', 'pus4d_local', 'trm6d_local', 'ivt_local','m5u54_global', 'p55_global', 'm1a58_global', 'ivt_global'],
-                        help='Indicate the T-loop modification profile being analyzed.')
+                        help='Indicate the T-loop modification profile being analyzed. choices = trm2d_local, pus4d_local, trm6d_local, ivt_local, m5u54_global, p55_global, m1a58_global, ivt_global')
     parser.add_argument('-q', '--query-reads', type=str, metavar='str', required=False, choices=['TP', 'FP', 'FN', 'TN'],
                         help='Option to print out True Positive, False Positive, False Negative, or True Negative '
                              'classified reads,')
