@@ -17,16 +17,15 @@ The learntLoop class is a tool designed for training and evaluating Support Vect
 ## Command-line Arguments
     -T, --Training: Input at least two training array files.
     -t, --testing: Input at least two testing array files.
-    -l, --label: Designate the training label associated with the testing array.
-    -q, --query-reads: Print out True Positive (TP), False Positive (FP), False Negative (FN), or True Negative (TN) classified reads.
-    -s, --spike-in: Spike in a percentage of reads from another array.
-    -r, --read-titrant: Input the array file containing reads that will be titrated.
-    -tl, --titrant-label: Assign the titrated reads array a label.
+    -l, --labels: Designate the training label associated with the testing arrays.
     -c, --classification: Use One-Versus-Rest (ovr) or One-Versus-One (ovo) classification (Default ovr).
+    -p, --profile: Indicate the T-loop modification profile being analyzed. choices=['trm2d_local', 'pus4d_local', 'trm6d_local', 'ivt_local','m5u54_global', 'p55_global', 'm1a58_global', 'ivt_global']
+    -q, --query-reads: Print out True Positive (TP), False Positive (FP), False Negative (FN), or True Negative (TN) classified reads.
+
 
 ## Example
 
-    python learntLoop-yeast.py -T ./IVT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv -t ./IVT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv
+    python learntLoop-yeast.py -T ./IVT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/training/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv -t ./IVT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv ./WT/testing/Saccharomyces_cerevisiae_chrI_trna4-SerAGA.tsv -l 0 1 -p ivt_local 
 
 ## Requirements
 - Python 3.x
