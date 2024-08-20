@@ -426,8 +426,8 @@ class learntLoop:
 
         for file in self.training_files:
             guts = file.split('/')
-            condition = guts[0]
-            tRNA = guts[2]
+            condition = guts[1]
+            tRNA = guts[3]
             self.cnds[condition] = None
             training_dfs.append(self.get_dataframe(file, default_training_labels[self.profile][tRNA][condition]))
 
